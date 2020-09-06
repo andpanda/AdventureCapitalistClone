@@ -7,7 +7,14 @@ import { Manager } from './Manager';
 
 export default class MainScreen extends Phaser.Scene {
     private investments: Array<Investment> = new Array<Investment>();
+
+    //used for the main screen
     private moneyLabel: Phaser.GameObjects.Text;
+
+    //used to be placed over the managers screen reference bg 
+    private moneyLabel2: Phaser.GameObjects.Text = null;
+
+    private managerFeedbackCircle:Phaser.GameObjects.Graphics;
 
     constructor() {
         super('mainscreen');
@@ -61,7 +68,7 @@ export default class MainScreen extends Phaser.Scene {
         //localStorage.clear();
         GameData.Load();                
 
-        this.moneyLabel = this.add.text(250, 12, '$ 0.00', { font: '50px Arial' });
+        this.moneyLabel = this.add.text(250, 12, '$ 0.00', { font: '50px Arial' });        
 
         let k: number = 0;
         let offsetX: number = 0;
@@ -77,6 +84,11 @@ export default class MainScreen extends Phaser.Scene {
             k++;
         }
 
+        this.managerFeedbackCircle = this.add.graphics({x: 0, y: 0});
+        var circle = new Phaser.Geom.Circle(52, 366, 12);
+        this.managerFeedbackCircle.fillStyle(0xE0884B, 1); 
+        this.managerFeedbackCircle.fillCircleShape(circle);                
+
         let menuTitles:string[] = ['Unlocks', 'Upgrades', 'Managers', 'Investors'];
         for(let i = 0; i < menuTitles.length; i++){
             let menuOption:Phaser.GameObjects.Image = this.add.image(122, 224 + 73 * i, 'menu_option');
@@ -84,7 +96,7 @@ export default class MainScreen extends Phaser.Scene {
             let menuTitle:string = menuTitles[i];
             let menuText:Phaser.GameObjects.Text = this.add.text(menuOption.x - 20, menuOption.y - 17, menuTitle, { font: '24px tabitha', color: '#605249' });
 
-            if(menuTitle == 'Managers'){
+            if(menuTitle == 'Managers'){                
                 menuOption.setInteractive({ useHandCursor: true })
                 .on('pointerdown', () => {
                     this.OnOpenManagers();
@@ -97,10 +109,20 @@ export default class MainScreen extends Phaser.Scene {
     
     update() {        
         this.moneyLabel.text = StringFormatUtils.FormatMoney(PlayerData.money);
+        if(this.moneyLabel2 != null) this.moneyLabel2.text = this.moneyLabel.text;
 
+        let canShowManagerFeedback:boolean;
         for (let i = 0; i < this.investments.length; i++) {
             this.investments[i].update();
+            
+            let inv:InvestmentData = GameData.investmentsData[i];
+            //if does not have this manager yet and can purchase him show the circle feedback
+            if(!inv.haveManager && inv.own > 0 && PlayerData.money >= GameData.managerPrices[i]){
+                canShowManagerFeedback = true;
+            }
         }
+        
+        this.managerFeedbackCircle.visible = canShowManagerFeedback;
     }
 
     private CheckOfflineEarnings() {
@@ -166,16 +188,23 @@ export default class MainScreen extends Phaser.Scene {
         ref.setInteractive({ useHandCursor: false })
         .on('pointerdown', () => {
             event.stopPropagation();
-        });    
+        });            
 
-        let container:Phaser.GameObjects.Container = this.add.container(450, 350);        
+        let container:Phaser.GameObjects.Container = this.add.container(450, 350);   
+        let k = 0;     
         for(let i = 0; i < GameData.investmentsData.length; i++) {            
-            container.add(new Manager(this, i, 0, 100 * i));
+            if(!GameData.investmentsData[i].haveManager){
+                container.add(new Manager(this, i, 0, 100 * k));
+                k++;
+            }            
         }          
+
+        this.moneyLabel2 = this.add.text(250, 12, '$ 0.00', { font: '50px Arial' });
         
         var mask = this.add.graphics();
 
         //  Shapes drawn to the Graphics object must be filled.
+        mask.fillStyle(0xFFFFFF, 0);
         mask.fillRect(200, 300, 800, 640);        
 
         //	And apply it to the Sprite
@@ -202,6 +231,8 @@ export default class MainScreen extends Phaser.Scene {
             btnClose.setTexture('btn_close_normal')            
         })
         .on('pointerup', () => {
+            this.moneyLabel2.destroy();
+            this.moneyLabel2 = null;
             container.destroy();
             ref.destroy();
             btnClose.destroy();

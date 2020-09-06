@@ -14,6 +14,8 @@ export class Investment extends Phaser.GameObjects.GameObject {
     private revenueText: Phaser.GameObjects.Text;  
     
     private frameBg:Phaser.GameObjects.Image;
+    private investmentBtn:Phaser.GameObjects.Image;
+    private mouseOverButton:boolean;
 
     constructor(scene: Scene, id: number, x: number, y: number, iData: InvestmentData) {
         super(scene, 'sprite');
@@ -129,26 +131,31 @@ export class Investment extends Phaser.GameObjects.GameObject {
 
         greenBar.setMask(mask);
 
-        let investmentBtn = scene.add.image(investmentFrame.x + 130, investmentFrame.y + 28, 'invest_btn');
-        investmentBtn.scaleX = 0.7;
-        investmentBtn.scaleY = 0.5;
+        this.investmentBtn = scene.add.image(investmentFrame.x + 130, investmentFrame.y + 28, 'invest_btn');
+        this.investmentBtn.scaleX = 0.7;
+        this.investmentBtn.scaleY = 0.5;
 
-        investmentBtn.setInteractive({ useHandCursor: true })
-            // .on('pointerover', () => console.log('oi'))
-            // .on('pointerout', () => console.log('oi2'))
+        this.investmentBtn.setInteractive({ useHandCursor: true })
+            .on('pointerover', () => this.mouseOverButton = true)
+            .on('pointerout', () => this.mouseOverButton = false)
             .on('pointerdown', () => {
-                investmentBtn.setTexture('invest_btn_pressed')
-                if (PlayerData.money >= this.GetCurrentCost()) this.OnPurchase(1)
+                if(this.CanPurchase()){                    
+                    if (PlayerData.money >= this.GetCurrentCost()) this.OnPurchase(1)
+                }                
             })
-            .on('pointerup', () => { investmentBtn.setTexture('invest_btn'); });
+            // .on('pointerup', () => { 
+            //     if(this.CanPurchase()){
+            //         this.investmentBtn.setTexture('invest_btn'); 
+            //     }                 
+            // });
 
-        let buyText: Phaser.GameObjects.Text = scene.add.text(investmentBtn.x - 63, investmentBtn.y - 20, 'Buy', {font: '18px tabitha', color: '#FFFFFF'});
+        let buyText: Phaser.GameObjects.Text = scene.add.text(this.investmentBtn.x - 63, this.investmentBtn.y - 20, 'Buy', {font: '18px tabitha', color: '#FFFFFF'});
         scene.add.text(buyText.x, buyText.y + 18, 'x1', {font: '18px tabitha', color: '#FFFFFF'});
         let bPrice: number = this.iData.basePrice;
         this.priceText = scene.add.text(buyText.x + 130, buyText.y, StringFormatUtils.FormatMoney(this.GetCurrentCost()), {font: '18px tabitha', color: '#FFFFFF'});
         this.priceText.setOrigin(1, 0);        
 
-        let timerBtn = scene.add.image(investmentBtn.x + 126, investmentBtn.y, 'invest_btn_disabled');
+        let timerBtn = scene.add.image(this.investmentBtn.x + 126, this.investmentBtn.y, 'invest_btn_disabled');
         timerBtn.scaleX = 0.42;
         timerBtn.scaleY = 0.5;
         this.timerText = scene.add.text(timerBtn.x, timerBtn.y, '00:00:00', {font: '18px tabitha', color: '#FFFFFF'})
@@ -174,8 +181,13 @@ export class Investment extends Phaser.GameObjects.GameObject {
     update() {
         if(!this.OwnInvestment()){
             this.frameBg.setTexture(this.CanPurchase() ? 'investment_purchase' : 'inactive_investment');         
-        }  
-        
+        }else{
+            if(this.CanPurchase()){                
+                this.investmentBtn.setTexture(this.mouseOverButton ? 'invest_btn_pressed' : 'invest_btn');
+            }else {
+                this.investmentBtn.setTexture('invest_btn_disabled');
+            }            
+        }                  
 
         if (this.iData.isRunning) {
             let timeleft: number = this.iData.endTime - Date.now();            
