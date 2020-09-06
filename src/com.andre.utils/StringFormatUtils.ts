@@ -8,4 +8,8 @@ export class StringFormatUtils{
           
           return formatter.format(number);
     }    
+
+    public static FormatTime(time:number):string {
+        return new Date(time).toISOString().slice(11,19)
+    }    
 }

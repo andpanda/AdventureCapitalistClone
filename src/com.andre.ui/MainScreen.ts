@@ -49,6 +49,9 @@ export default class MainScreen extends Phaser.Scene {
 
         this.load.image('manager_upgrade_disabled', 'assets/Managers/manager_upgrade_disabled.png');
         this.load.image('manager_upgrade_enabled', 'assets/Managers/manager_upgrade_enabled.png');
+
+        this.load.image('dandy_normal', 'assets/Misc/dandy_normal.png');        
+        this.load.image('dandy_over', 'assets/Misc/dandy_over.png');        
     }
 
     create() {
@@ -56,9 +59,7 @@ export default class MainScreen extends Phaser.Scene {
         let ref = this.add.image(this.cameras.default.width / 2, this.cameras.default.height / 2, 'ref');
         //ref.alpha = 0.5; 
         //localStorage.clear();
-        GameData.Load();        
-
-        this.CheckOfflineEarnings();
+        GameData.Load();                
 
         this.moneyLabel = this.add.text(250, 12, '$ 0.00', { font: '50px Arial' });
 
@@ -81,7 +82,7 @@ export default class MainScreen extends Phaser.Scene {
             let menuOption:Phaser.GameObjects.Image = this.add.image(122, 224 + 73 * i, 'menu_option');
             menuOption.scale = 0.45;
             let menuTitle:string = menuTitles[i];
-            let menuText:Phaser.GameObjects.Text = this.add.text(menuOption.x - 12, menuOption.y - 10, menuTitle, { color: 'grey' });
+            let menuText:Phaser.GameObjects.Text = this.add.text(menuOption.x - 20, menuOption.y - 17, menuTitle, { font: '24px tabitha', color: '#605249' });
 
             if(menuTitle == 'Managers'){
                 menuOption.setInteractive({ useHandCursor: true })
@@ -89,8 +90,9 @@ export default class MainScreen extends Phaser.Scene {
                     this.OnOpenManagers();
                 });                
             }
-        }        
-
+        }    
+        
+        this.CheckOfflineEarnings();
     }
     
     update() {        
@@ -103,23 +105,60 @@ export default class MainScreen extends Phaser.Scene {
 
     private CheckOfflineEarnings() {
         let totalEarned = 0;
+        let timeAway: number = Math.abs(GameData.investmentsData[0].endTime - Date.now());            
         for (let i = 0; i < GameData.investmentsData.length; i++) {
             let inv:InvestmentData = GameData.investmentsData[i];
             if(inv.haveManager){
-                let timeleft: number = inv.endTime - Date.now();            
+                let timeleft: number = inv.endTime - Date.now();                            
+                
                 if(timeleft < 0){
-                    let timesEarned:number = Math.floor(Math.abs(timeleft) / (inv.duration * 1000));                                        
-                    totalEarned = timesEarned * (inv.revenue * inv.own);
+                    let timesEarned:number = Math.floor(Math.abs(timeleft) / (inv.duration * 1000));                    
+                                                            
+                    totalEarned += timesEarned * (inv.revenue * inv.own);                    
                 }                
             }
-        }
-
+        }            
+        
         if(totalEarned > 0){
-
+            this.ShowOfflineEarnignPopup(totalEarned, timeAway);
         }
         
         PlayerData.money += totalEarned;
         GameData.Save();
+    }
+
+    private ShowOfflineEarnignPopup(totalEarned:number, offlineTime:number) {
+        let container:Phaser.GameObjects.Container = this.add.container(0, 0);
+
+        let bg = this.add.image(this.cameras.default.width / 2, this.cameras.default.height / 2, 'ref');
+        bg.scale = 2;
+        bg.setInteractive({ useHandCursor: false })
+        .on('pointerdown', () => {
+            event.stopPropagation();
+        }); 
+        //ref.alpha = 0.6;
+        container.add(bg);
+
+        container.add(this.add.text(105, 54, 'Welcome back Capitalist!',  { font: '90px tabitha', fill: '#539DC0'  }));
+        container.add(this.add.text(340, 180, 'You were offline for ' + StringFormatUtils.FormatTime(offlineTime),  { font: '30px tabitha', fill: '#FFFFFF'  }));
+        container.add(this.add.text(440, 250, 'You earned',  { font: '30px tabitha', fill: '#FFFFFF'  }));        
+        container.add(this.add.text(500, 332, '' + StringFormatUtils.FormatMoney(totalEarned),  { font: '30px tabitha', fill: '#00FF00'  }).setOrigin(0.5,0.5));
+        container.add(this.add.text(388, 360, 'while you were gone',  { font: '30px tabitha', fill: '#FFFFFF'  }));
+        container.add(this.add.text(130, 440, 'Now get in there and maximize those profits, you job creator!',  { font: '30px tabitha', fill: '#FFFFFF'  }));
+        
+        let dandyBtn:Phaser.GameObjects.Image = this.add.image(890, 570, 'dandy_normal')                
+        dandyBtn.setInteractive({ useHandCursor: true })            
+            .on('pointerover', () => {
+                dandyBtn.setTexture('dandy_over')
+            })
+            .on('pointerout', () => {
+                dandyBtn.setTexture('dandy_normal')
+            })
+            .on('pointerdown', () => {
+               container.destroy();
+            });            
+        container.add(dandyBtn);        
+        container.add(this.add.text(dandyBtn.x - 48, dandyBtn.y - 25, 'Dandy!', {font: '38px tabitha', fill: '#212121'}));
     }
 
     private OnOpenManagers() {
@@ -143,20 +182,6 @@ export default class MainScreen extends Phaser.Scene {
         //  Comment out this line to see the mask visually
         container.setMask(mask.createGeometryMask());
 
-        let btnClose = this.add.image(this.cameras.default.width - 100, 80, 'btn_close_normal');        
-        btnClose.setInteractive({ useHandCursor: true })
-        .on('pointerover', () => {
-            btnClose.setTexture('btn_close_pressed')            
-        })
-        .on('pointerout', () => {
-            btnClose.setTexture('btn_close_normal')            
-        })
-        .on('pointerup', () => {
-            container.destroy();
-             ref.destroy();
-            btnClose.destroy();
-        });   
-        
         var zone = this.add.zone(200, 0, 480, 640).setOrigin(0).setInteractive();
 
         zone.on('pointermove', function (pointer:any) {                        
@@ -167,6 +192,22 @@ export default class MainScreen extends Phaser.Scene {
             }
 
         });
+
+        let btnClose = this.add.image(this.cameras.default.width - 100, 80, 'btn_close_normal');        
+        btnClose.setInteractive({ useHandCursor: true })
+        .on('pointerover', () => {
+            btnClose.setTexture('btn_close_pressed')            
+        })
+        .on('pointerout', () => {
+            btnClose.setTexture('btn_close_normal')            
+        })
+        .on('pointerup', () => {
+            container.destroy();
+            ref.destroy();
+            btnClose.destroy();
+            zone.setInteractive(false);
+            zone.destroy();
+        });                   
     }
 
 }

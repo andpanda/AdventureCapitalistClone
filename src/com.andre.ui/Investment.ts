@@ -5,8 +5,8 @@ import { PlayerData } from '../com.andre.system/PlayerData';
 import { GameData } from '../com.andre.system/GameData';
 
 export class Investment extends Phaser.GameObjects.GameObject {
+    private id:number;
     private iData: InvestmentData;
-
     private ownLabel: Phaser.GameObjects.Text;
     private timerText: Phaser.GameObjects.Text;
     private progressBar: Phaser.GameObjects.Image;
@@ -20,14 +20,14 @@ export class Investment extends Phaser.GameObjects.GameObject {
 
         this.iData = iData;
 
-        //this.investmentId = id;
+        this.id = id;
         if (this.OwnInvestment()) {
             this.DrawInvestment(scene, id, x, y);
         } else {
             this.frameBg = scene.add.image(x + 122, y, 'inactive_investment');
             this.frameBg.scale = 0.8;
-            let t1 = scene.add.text(this.frameBg.x, this.frameBg.y - 14, iData.investmentName).setOrigin(0.5, 0.5);
-            let t2 = scene.add.text(this.frameBg.x, this.frameBg.y + 14, StringFormatUtils.FormatMoney(iData.basePrice)).setOrigin(0.5, 0.5);
+            let t1 = scene.add.text(this.frameBg.x, this.frameBg.y - 14, iData.investmentName, {font: '24px tabitha', color: '#323232'}).setOrigin(0.5, 0.5);
+            let t2 = scene.add.text(this.frameBg.x, this.frameBg.y + 14, StringFormatUtils.FormatMoney(iData.basePrice), {font: '24px tabitha', color: '#FFFFFF'}).setOrigin(0.5, 0.5);
 
             this.frameBg.setInteractive({ useHandCursor: true })
                 .on('pointerdown', () => {
@@ -64,6 +64,29 @@ export class Investment extends Phaser.GameObjects.GameObject {
         this.priceText.text = StringFormatUtils.FormatMoney(this.GetCurrentCost());
         this.revenueText.text = StringFormatUtils.FormatMoney(this.GetTotalRevenue());
 
+        console.log(this.id);
+        
+        var particles = this.scene.add.particles('investment_logo_' + this.id);
+
+        //dont use blend mode for last ico because it is black and will not appear if used
+        let blendMode = 'SCREEN';
+        if(this.id == 10) blendMode = '';
+
+        var emitter = particles.createEmitter({            
+            x: 400,
+            y: 300,
+            speed: { min: -800, max: 800 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 0.5, end: 0 },
+            blendMode: blendMode,
+            //active: false,
+            lifespan: 600,
+            gravityY: 800                       
+        });
+
+        emitter.stop();
+        emitter.emitParticle(5, this.ownLabel.x, this.ownLabel.y);                
+
         GameData.Save();
     }
 
@@ -75,7 +98,7 @@ export class Investment extends Phaser.GameObjects.GameObject {
         investmentFrame.scale = 0.55;
         let logo: Phaser.GameObjects.Image = scene.add.image(investmentFrame.x, investmentFrame.y - 8, 'investment_logo_' + id);
         logo.scale = 0.6;
-        this.ownLabel = scene.add.text(investmentFrame.x, investmentFrame.y + 20, '' + this.iData.own);
+        this.ownLabel = scene.add.text(investmentFrame.x, investmentFrame.y + 16, '' + this.iData.own, {font: '20px tabitha', color: '#FFFFFF'});
         this.ownLabel.setOrigin(0.5, 0);        
 
         investmentFrame.setInteractive({ useHandCursor: true })
@@ -97,8 +120,8 @@ export class Investment extends Phaser.GameObjects.GameObject {
         greenBar.setOrigin(1, 0.5);
         greenBar.scaleX = 0;
 
-        this.revenueText = scene.add.text(investmentProgressBg.x + 24, investmentProgressBg.y - 7, StringFormatUtils.FormatMoney(this.GetTotalRevenue()));
-        this.revenueText.setOrigin(1, 0);
+        this.revenueText = scene.add.text(investmentProgressBg.x, investmentProgressBg.y - 12, StringFormatUtils.FormatMoney(this.GetTotalRevenue()), {font: '20px tabitha', color: '#FFFFFF'});
+        this.revenueText.setOrigin(0.5, 0);
 
         this.progressBar = greenBar;
 
@@ -119,16 +142,16 @@ export class Investment extends Phaser.GameObjects.GameObject {
             })
             .on('pointerup', () => { investmentBtn.setTexture('invest_btn'); });
 
-        let buyText: Phaser.GameObjects.Text = scene.add.text(investmentBtn.x - 63, investmentBtn.y - 20, 'Buy');
-        scene.add.text(buyText.x, buyText.y + 20, 'x1');
+        let buyText: Phaser.GameObjects.Text = scene.add.text(investmentBtn.x - 63, investmentBtn.y - 20, 'Buy', {font: '18px tabitha', color: '#FFFFFF'});
+        scene.add.text(buyText.x, buyText.y + 18, 'x1', {font: '18px tabitha', color: '#FFFFFF'});
         let bPrice: number = this.iData.basePrice;
-        this.priceText = scene.add.text(buyText.x + 130, buyText.y, StringFormatUtils.FormatMoney(this.GetCurrentCost()));
+        this.priceText = scene.add.text(buyText.x + 130, buyText.y, StringFormatUtils.FormatMoney(this.GetCurrentCost()), {font: '18px tabitha', color: '#FFFFFF'});
         this.priceText.setOrigin(1, 0);        
 
         let timerBtn = scene.add.image(investmentBtn.x + 126, investmentBtn.y, 'invest_btn_disabled');
         timerBtn.scaleX = 0.42;
         timerBtn.scaleY = 0.5;
-        this.timerText = scene.add.text(timerBtn.x, timerBtn.y, '00:00:00')
+        this.timerText = scene.add.text(timerBtn.x, timerBtn.y, '00:00:00', {font: '18px tabitha', color: '#FFFFFF'})
         this.timerText.setOrigin(0.5, 0.5);
 
         if(this.iData.haveManager) this.RunInvestment();
@@ -157,7 +180,7 @@ export class Investment extends Phaser.GameObjects.GameObject {
         if (this.iData.isRunning) {
             let timeleft: number = this.iData.endTime - Date.now();            
             
-            this.timerText.text = new Date(timeleft).toISOString().slice(11,19)
+            this.timerText.text = StringFormatUtils.FormatTime(timeleft);
 
             let d = this.iData.duration * 1000;
             let l = ((timeleft - d) / d);            
