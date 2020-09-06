@@ -1,7 +1,7 @@
 import 'phaser';
 import { Scene, Data } from 'phaser';
 import { StringFormatUtils } from '../com.andre.utils/StringFormatUtils';
-import { PlayerData } from '../com.andre.data/PlayerData';
+import { PlayerData } from '../com.andre.system/PlayerData';
 import { GameData } from '../com.andre.system/GameData';
 
 export class Investment extends Phaser.GameObjects.GameObject {
@@ -172,9 +172,11 @@ export class Investment extends Phaser.GameObjects.GameObject {
 
                 GameData.Save();                
                 
-                if (this.iData.haveManager) this.RunInvestment();
+                //if (this.iData.haveManager) this.RunInvestment();
             }
         }
+
+        if(this.iData.haveManager && !this.iData.isRunning) this.RunInvestment();
     }
 }
 

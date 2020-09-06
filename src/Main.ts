@@ -1,5 +1,5 @@
 import 'phaser';
-import MainScreen from './MainScreen';
+import MainScreen from './com.andre.ui/MainScreen';
 
 export default class Main extends Phaser.Scene
 {
