@@ -2,6 +2,8 @@ import { PlayerData } from "../com.andre.system/PlayerData";
 import { InvestmentData } from '../com.andre.ui/Investment';
 
 export class GameData {
+
+    //data struct that contains all informations about the Invetment, its name, duration, cost etc..
     public static investmentsData: Array<InvestmentData> = [{ investmentName: "Lemonade Stand", startTime: 0, own: 1, basePrice: 50, costIncrement: 0.05, duration: 1, revenue: 10, endTime: 0, isRunning: false, haveManager: false },
     { investmentName: "Newspaper", startTime: 0, own: 0, basePrice: 100, costIncrement: 0.1, duration: 2, revenue: 100, endTime: 0, isRunning: false, haveManager: false },
     { investmentName: "Car Wash", startTime: 0, own: 0, basePrice: 200, costIncrement: 0.1, duration: 3, revenue: 200, endTime: 0, isRunning: false, haveManager: false },
@@ -13,6 +15,7 @@ export class GameData {
     { investmentName: "Bank", startTime: 0, own: 0, basePrice: 800, costIncrement: 0.1, duration: 10, revenue: 1000, endTime: 0, isRunning: false, haveManager: false },
     { investmentName: "Oil", startTime: 0, own: 0, basePrice: 1000, costIncrement: 0.1, duration: 30, revenue: 2000, endTime: 0, isRunning: false, haveManager: false }];
 
+    //simple data structres with the name and value of each manager the index order corresponds to the investments index.
     public static managerNames:Array<string> = ['The Man','Perry Black','Bailey','Tony Tiger','Shags','Grumpy','Jin','Not Hannibal','Ralphchoo','Mr Hamilton','Ralphchoo'];    
     public static managerPrices:Array<number> = [5000,10000,50000,66666,100000,200000,300000,400000,500000,600000];    
 

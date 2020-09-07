@@ -58,7 +58,14 @@ export default class MainScreen extends Phaser.Scene {
         this.load.image('manager_upgrade_enabled', 'assets/Managers/manager_upgrade_enabled.png');
 
         this.load.image('dandy_normal', 'assets/Misc/dandy_normal.png');        
-        this.load.image('dandy_over', 'assets/Misc/dandy_over.png');        
+        this.load.image('dandy_over', 'assets/Misc/dandy_over.png');     
+        
+        this.load.image('buy_btn_inactive', 'assets/Misc/buy_btn_inactive.png');   
+
+        this.load.image('buy_btn_inactive', 'assets/Misc/buy_btn_1x.png');  
+        this.load.image('buy_btn_inactive', 'assets/Misc/buy_btn_1x_pressed.png');  
+
+        
     }
 
     create() {
@@ -71,7 +78,7 @@ export default class MainScreen extends Phaser.Scene {
         this.moneyLabel = this.add.text(250, 12, '$ 0.00', { font: '50px Arial' });        
 
         let k: number = 0;
-        let offsetX: number = 0;
+        let offsetX: number = 0;        
 
         //draw the buttons
         for (let i = 0; i < GameData.investmentsData.length; i++) {
