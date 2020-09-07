@@ -2,7 +2,7 @@
 
 This project uses the Phaser 3 template with [TypeScript](https://www.typescriptlang.org/) and uses [Rollup](https://rollupjs.org) for bundling.
 
-You can play the game at: [Adventure Capitalist](adventuercapitalist.netlify.app)
+You can play the game at: [Adventure Capitalist](https://adventuercapitalist.netlify.app)
 
 ## Requirements
 
